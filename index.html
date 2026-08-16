@@ -5,23 +5,394 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bus Detour Live Report</title>
+
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background: #f4f6f8;
-      overflow: hidden;
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e2e8f0;
+      --shadow: 0 8px 24px rgba(15,23,42,.08);
+      --brand:#1d4ed8;
+
+      --leftStripe:#1d4ed8;
+      --chipBg:#0f172a;
+      --chipText:#ffffff;
+
+      --routeBg:#f8fafc;
+      --routeBorder:#e2e8f0;
+
+      --stopRed:#dc2626;
+      --ersatzGreen:#16a34a;
+
+      --dateBoxBg:#eef2ff;
+      --dateBoxBorder:#86b3f0;
+
+      --dateColor:#0f172a;
+      --timeColor:#e8150e;
     }
-    iframe {
+
+    *{ box-sizing:border-box; }
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin:0;
+      padding: 12px;
+    }
+
+    .wrap{ max-width: 900px; margin: 0 auto; }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      margin: 10px 0 12px;
+    }
+
+    .search{
+      flex:1;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      box-shadow: 0 1px 0 rgba(15,23,42,.04);
+    }
+
+    .search input{
+      border:0;
+      outline:none;
+      width:100%;
+      font-size:17px;
+      background:transparent;
+      color:var(--text);
+      min-width:0;
+    }
+
+    .btn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:12px;
+      padding:10px 14px;
+      font-weight:900;
+      font-size:17px;
+      color:var(--text);
+      box-shadow: 0 1px 0 rgba(15,23,42,.04);
+      white-space:nowrap;
+      cursor:pointer;
+    }
+
+    .grid{ display:grid; gap:14px; }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      left:0; top:0; bottom:0;
+      width:6px;
+      background:var(--leftStripe);
+    }
+
+    .cardInner{ padding:14px 16px; }
+
+    .location{
+      font-size:21px;
+      font-weight:950;
+      color:var(--brand);
+      margin: 2px 0 12px;
+      line-height: 1.15;
+      word-break: break-word;
+      overflow-wrap:anywhere;
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:10px 12px;
+      font-size:17px;
+      line-height: 1.35;
+    }
+
+    .label{
+      font-weight:900;
+      color:#000;
+      white-space:nowrap;
+    }
+
+    .label.stop{ color:var(--stopRed); }
+    .label.ersatz{ color:var(--ersatzGreen); }
+
+    .value{
+      font-weight:650;
+      word-break: break-word;
+      overflow-wrap:anywhere;
+    }
+
+    .chips{ display:flex; gap:6px; flex-wrap:wrap; }
+    .chip{
+      background:var(--chipBg);
+      color:var(--chipText);
+      border-radius:999px;
+      padding:4px 10px;
+      font-weight:950;
+      font-size:16px;
+      letter-spacing:.2px;
+    }
+
+    .dateBox{
+      background: var(--dateBoxBg);
+      border: 1px solid var(--dateBoxBorder);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .dateGrid{
+      display:grid;
+      grid-template-columns:140px 1fr;
+      gap:10px 12px;
+      font-size:17px;
+      line-height: 1.35;
+      align-items:start;
+    }
+
+    .dt{
+      display:inline-flex;
+      gap:10px;
+      align-items:baseline;
+      flex-wrap:wrap;
+    }
+
+    .dtDate{
+      color: var(--dateColor);
+      font-weight: 950;
+      letter-spacing: .2px;
+    }
+
+    .dtTime{
+      color: var(--timeColor);
+      font-weight: 950;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .routeBox{
+      margin-top:14px;
+      background:var(--routeBg);
+      border:1px solid var(--routeBorder);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:17px;
+    }
+    .routeTitle{ font-weight:900; margin-bottom:6px; }
+
+    .actions{ margin-top:14px; display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .pdfBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      font-weight:950;
+      font-size:19px;
+      color:var(--brand);
+      text-decoration:none;
+      background:#fff;
       width: 100%;
-      height: 100%;
-      border: none;
+      max-width: 360px;
+    }
+    .hint{ color: var(--muted); font-size: 14px; font-weight: 800; }
+
+    .empty{
+      background:#fff;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 20px 14px;
+      text-align:center;
+      color: var(--muted);
+      box-shadow: 0 1px 0 rgba(15,23,42,.04);
+      font-weight: 900;
+      font-size: 17px;
+    }
+
+    @media(max-width:520px){
+      .kv{ grid-template-columns: 130px 1fr; }
+      .dateGrid{ grid-template-columns: 130px 1fr; }
+      .pdfBtn{ max-width: 100%; }
     }
   </style>
 </head>
+
 <body>
-  <iframe src="https://script.google.com/macros/s/AKfycbwDKqm3iHNWGuOGOHFrynXgxns_QVTlGzVEsVWJMzCa06uWPRSZkAGHu3X55_zGpR69Xw/exec"></iframe>
+<div class="wrap">
+
+  <div class="controls">
+    <div class="search">
+      🔎 <input id="q" placeholder="Suchen: Ort, Linien, Straßen, Hinweise …" />
+    </div>
+    <button class="btn" onclick="reload()">Reload</button>
+  </div>
+
+  <div id="container" class="grid"></div>
+</div>
+
+<script>
+let ALL = [];
+
+function esc(s){
+  if(s === null || s === undefined) return "";
+  return String(s)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+function norm(v){
+  const s = String(v ?? "").trim();
+  if(!s) return "none";
+  if(s.toLowerCase() === "n/a") return "none";
+  return s;
+}
+
+function linesChips(lines){
+  const s0 = String(lines ?? "").trim();
+  const s = norm(s0);
+  if(s === "none") return "none";
+  const parts = s.split(",").map(x=>x.trim()).filter(Boolean);
+  if(!parts.length) return "none";
+  return `<div class="chips">${parts.map(p=>`<span class="chip">${esc(p)}</span>`).join("")}</div>`;
+}
+
+function fmtDT(dateStr, timeStr){
+  return `<span class="dt">
+    <span class="dtDate">${esc(norm(dateStr))}</span>
+    <span class="dtTime">${esc(norm(timeStr))}</span>
+  </span>`;
+}
+
+function card(r){
+  const ort = norm(r.location);
+
+  const startDT = fmtDT(r.startDate, r.startTime);
+  const endDT   = fmtDT(r.endDate, r.endTime);
+
+  const strassen = norm(r.streets);
+  const haltestellen = norm(r.busStops);
+  const ersatz = norm(r.ersatzStops);
+
+  const umleitung = norm(r.detour);
+  const hinweise = norm(r.hinweise);
+
+  const pdf = String(r.pdf || "").trim();
+  const pdfHtml = pdf
+    ? `<a class="pdfBtn" href="${esc(pdf)}" target="_blank" rel="noopener">📄 PDF öffnen</a>
+       <span class="hint">öffnet in Drive</span>`
+    : `<span class="hint">📄 PDF: none</span>`;
+
+  return `
+    <div class="card">
+      <div class="cardInner">
+        <div class="location">${esc(ort)}</div>
+
+        <div class="dateBox">
+          <div class="dateGrid">
+            <div class="label">Start</div><div class="value">${startDT}</div>
+            <div class="label">Ende</div><div class="value">${endDT}</div>
+          </div>
+        </div>
+
+        <div class="kv">
+          <div class="label">Linien</div><div class="value">${linesChips(r.lines)}</div>
+          <div class="label">Straßen</div><div class="value">${esc(strassen)}</div>
+
+          <div class="label stop">Haltestellen</div><div class="value">${esc(haltestellen)}</div>
+          <div class="label ersatz">Ersatz-Hst</div><div class="value">${esc(ersatz)}</div>
+        </div>
+
+        <div class="routeBox">
+          <div class="routeTitle">Umleitung</div>
+          ${esc(umleitung)}
+        </div>
+
+        <div class="routeBox">
+          <div class="routeTitle">Hinweise</div>
+          ${esc(hinweise)}
+        </div>
+
+        <div class="actions">
+          ${pdfHtml}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function render(rows){
+  ALL = rows || [];
+  const c = document.getElementById("container");
+  if(!ALL.length){
+    c.innerHTML = `<div class="empty">Keine aktiven Einträge.</div>`;
+    return;
+  }
+  c.innerHTML = ALL.map(card).join("");
+  bindSearch();
+}
+
+function bindSearch(){
+  const q = document.getElementById("q");
+  q.oninput = () => {
+    const term = (q.value || "").toLowerCase().trim();
+    const c = document.getElementById("container");
+
+    if(!term){
+      c.innerHTML = ALL.map(card).join("");
+      return;
+    }
+
+    const filtered = ALL.filter(r => {
+      const blob = [
+        r.location, r.startDate, r.startTime, r.endDate, r.endTime,
+        r.lines, r.streets, r.busStops, r.ersatzStops, r.detour, r.hinweise
+      ].join(" ").toLowerCase();
+      return blob.includes(term);
+    });
+
+    c.innerHTML = filtered.length ? filtered.map(card).join("") : `<div class="empty">Keine Treffer.</div>`;
+  };
+}
+
+const API_URL = "https://script.google.com/macros/s/AKfycbyec2ii-B4Zedff0f8xjUtgAwl5tyV68CN2-Q3gBTClnkxy2gxpGWoQvx-p1RhaIZbq9Q/exec";
+
+function reload() {
+  const container = document.getElementById("container");
+  container.innerHTML = `<div class="empty">در حال بارگذاری اطلاعات از دیتابیس...</div>`;
+
+  fetch(API_URL)
+    .then(response => response.json())
+    .then(data => {
+      render(data); 
+    })
+    .catch(error => {
+      console.error("Error fetching data:", error);
+      container.innerHTML = `<div class="empty">خطا در دریافت اطلاعات.</div>`;
+    });
+}
+
+// اجرای خودکار پس از لود صفحه
+window.addEventListener("DOMContentLoaded", reload);
+</script>
 </body>
 </html>
