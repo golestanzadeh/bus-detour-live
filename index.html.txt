@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bus Detour Live Report</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #f4f6f8;
+      overflow: hidden;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <iframe src="https://script.google.com/macros/s/AKfycbwDKqm3iHNWGuOGOHFrynXgxns_QVTlGzVEsVWJMzCa06uWPRSZkAGHu3X55_zGpR69Xw/exec"></iframe>
+</body>
+</html>
