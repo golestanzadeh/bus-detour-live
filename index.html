@@ -15,9 +15,7 @@
       --border:#e2e8f0;
       --shadow: 0 10px 30px -5px rgba(15,23,42,.06);
       --brand:#2563eb;
-      --brand-hover:#1d4ed8;
 
-      --leftStripe:#2563eb;
       --chipBg:#0f172a;
       --chipText:#ffffff;
 
@@ -42,7 +40,6 @@
       padding: 0 12px 24px;
     }
 
-    /* هدر ثابت و چسبان */
     .sticky-header{
       position: sticky;
       top: 0;
@@ -125,12 +122,13 @@
       box-shadow: 0 14px 35px -5px rgba(15,23,42,.1);
     }
 
+    /* نوار وضعیت هوشمند دینامیک در سمت چپ کارت */
     .card::before{
       content:"";
       position:absolute;
       left:0; top:0; bottom:0;
       width:6px;
-      background: var(--leftStripe);
+      background: var(--stripe-color, #2563eb);
     }
 
     .cardInner{ padding:18px 20px; }
@@ -313,6 +311,21 @@ function fmtDT(dateStr, timeStr){
   </span>`;
 }
 
+// تابع تشخیص رنگ وضعیت هوشمند بر اساس تاریخ (امروز، آینده، گذشته)
+function getStatusColor(startDate, endDate) {
+  const today = "2026-08-16"; // تاریخ جاری سیستم
+  const start = String(startDate || "").trim();
+  const end = String(endDate || "").trim();
+
+  if (start === today || (start <= today && end >= today)) {
+    return "#16a34a"; // سبز: فعال امروز
+  } else if (start > today) {
+    return "#2563eb"; // آبی: آینده
+  } else {
+    return "#94a3b8"; // خاکستری: گذشته
+  }
+}
+
 function card(r){
   const ort = norm(r.location);
   const startDT = fmtDT(r.startDate, r.startTime);
@@ -323,13 +336,15 @@ function card(r){
   const umleitung = norm(r.detour);
   const hinweise = norm(r.hinweise);
 
+  const stripeColor = getStatusColor(r.startDate, r.endDate);
+
   const pdf = String(r.pdf || "").trim();
   const pdfHtml = pdf
     ? `<a class="pdfBtn" href="${esc(pdf)}" target="_blank" rel="noopener">📄 PDF öffnen</a>`
     : `<span class="hint">📄 PDF: none</span>`;
 
   return `
-    <div class="card">
+    <div class="card" style="--stripe-color: ${stripeColor};">
       <div class="cardInner">
         <div class="location">${esc(ort)}</div>
 
